@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Dom Music</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Poppins;background:#020617;color:#fff}
+.header{padding:16px 20px;border-bottom:1px solid #1e293b;font-weight:600;font-size:18px}
+.screen{display:none;padding:20px}
+.active{display:block}
+.card{border:1px solid #1e293b;border-radius:18px;padding:16px;margin-bottom:16px;background:#020617}
+input,select,textarea{
+ width:100%;padding:12px;border-radius:12px;
+ border:1px solid #334155;background:#000;color:#fff;margin-bottom:10px
+}
+button{
+ width:100%;padding:12px;border:none;border-radius:14px;
+ background:#22c55e;color:#000;font-weight:600;font-size:15px
+}
+.list{
+ padding:14px;border:1px solid #1e293b;border-radius:14px;
+ margin-bottom:10px;cursor:pointer;display:flex;
+ justify-content:space-between;align-items:center
+}
+.badge{font-size:12px;padding:4px 10px;border-radius:20px}
+.ok{background:#22c55e;color:#000}
+.pendente{background:#334155}
+.media video,.media audio{width:100%;margin-top:14px;border-radius:14px}
+.progress{
+ height:10px;background:#1e293b;border-radius:10px;overflow:hidden;margin-bottom:16px
+}
+.progress span{
+ display:block;height:100%;background:#22c55e
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">🎵 Dom Music</div>
+
+<div id="login" class="screen active">
+  <div class="card">
+    <select id="tipo">
+      <option value="prof">Professor</option>
+      <option value="aluno">Aluno</option>
+    </select>
+    <input id="user" placeholder="Usuário">
+    <input id="pass" type="password" placeholder="Senha">
+    <button onclick="entrar()">Entrar</button>
+  </div>
+</div>
+
+<div id="prof" class="screen">
+  <button onclick="sair()">Sair</button>
+
+  <div class="card">
+    <h3>📚 Biblioteca de Mídia</h3>
+    <input id="midiaNome" placeholder="Nome da mídia">
+    <input type="file" id="midiaArquivo" accept="audio/*,video/*">
+    <button onclick="salvarMidia()">Salvar mídia</button>
+    <div id="listaMidias"></div>
+  </div>
+
+  <div class="card">
+    <h3>➕ Criar Aula</h3>
+    <input id="aulaTitulo" placeholder="Título da aula">
+    <textarea id="aulaTexto" placeholder="Descrição"></textarea>
+    <select id="aulaMidia"></select>
+    <button onclick="criarAula()">Criar aula</button>
+  </div>
+</div>
+
+<div id="aluno" class="screen">
+  <button onclick="sair()">Sair</button>
+
+  <div class="card">
+    <h3>📊 Progresso</h3>
+    <div class="progress"><span id="barra"></span></div>
+    <p id="percentual"></p>
+  </div>
+
+  <div id="aulas"></div>
+
+  <div id="verAula" class="card" style="display:none">
+    <h3 id="vtitulo"></h3>
+    <p id="vtexto"></p>
+    <div id="vmedia" class="media"></div>
+    <button onclick="concluir()">Marcar como concluída</button>
+  </div>
+</div>
+
+<script>
+const DB = JSON.parse(localStorage.getItem("domMusic")) || {
+  midias:[], aulas:[], progresso:{}
+};
+
+let aulaAtual=null;
+
+function save(){localStorage.setItem("domMusic",JSON.stringify(DB))}
+function show(id){
+ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+}
+
+function entrar(){
+ if(tipo.value==="prof" && user.value==="professor" && pass.value==="1234"){
+   show("prof"); atualizar();
+ } else if(tipo.value==="aluno"){
+   show("aluno"); listarAulas(); atualizarProgresso();
+ } else alert("Login inválido");
+}
+function sair(){show("login")}
+
+function salvarMidia(){
+ const file=midiaArquivo.files[0];
+ if(!file) return alert("Selecione um arquivo");
+ const r=new FileReader();
+ r.onload=()=>{
+  DB.midias.push({nome:midiaNome.value,tipo:file.type,data:r.result});
+  midiaNome.value=""; midiaArquivo.value="";
+  save(); atualizar();
+ };
+ r.readAsDataURL(file);
+}
+
+function atualizar(){
+ listaMidias.innerHTML="";
+ aulaMidia.innerHTML="<option value=''>Sem mídia</option>";
+ DB.midias.forEach((m,i)=>{
+  listaMidias.innerHTML+=`<div class="list">${m.nome}</div>`;
+  aulaMidia.innerHTML+=`<option value="${i}">${m.nome}</option>`;
+ });
+}
+
+function criarAula(){
+ DB.aulas.push({titulo:aulaTitulo.value,texto:aulaTexto.value,midia:aulaMidia.value});
+ aulaTitulo.value=aulaTexto.value="";
+ save(); alert("Aula criada");
+}
+
+function listarAulas(){
+ aulas.innerHTML="";
+ DB.aulas.forEach((a,i)=>{
+  const done=DB.progresso[i];
+  aulas.innerHTML+=`
+   <div class="list" onclick="abrir(${i})">
+    ${a.titulo}
+    <span class="badge ${done?'ok':'pendente'}">
+      ${done?'Concluída':'Pendente'}
+    </span>
+   </div>`;
+ });
+}
+
+function abrir(i){
+ aulaAtual=i;
+ const a=DB.aulas[i];
+ verAula.style.display="block";
+ vtitulo.innerText=a.titulo;
+ vtexto.innerText=a.texto;
+ vmedia.innerHTML="";
+ if(a.midia==="") return;
+ const m=DB.midias[a.midia];
+ if(m.tipo.startsWith("video")){
+  vmedia.innerHTML=`<video controls controlsList="nodownload" src="${m.data}"></video>`;
+ } else {
+  vmedia.innerHTML=`<audio controls controlsList="nodownload" src="${m.data}"></audio>`;
+ }
+}
+
+function concluir(){
+ DB.progresso[aulaAtual]=true;
+ save(); listarAulas(); atualizarProgresso();
+}
+
+function atualizarProgresso(){
+ const total=DB.aulas.length;
+ const concluidas=Object.values(DB.progresso).filter(v=>v).length;
+ const pct= total?Math.round(concluidas/total*100):0;
+ barra.style.width=pct+"%";
+ percentual.innerText=pct+"% concluído";
+}
+</script>
+
+</body>
+</html>
