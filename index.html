@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <title>Dom Music</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#020617">
+
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
@@ -37,6 +41,15 @@ button{
  display:block;height:100%;background:#22c55e
 }
 </style>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function() {
+    navigator.serviceWorker.register("/sw.js");
+  });
+}
+</script>
+
 </head>
 
 <body>
@@ -189,3 +202,4 @@ function atualizarProgresso(){
 
 </body>
 </html>
+
