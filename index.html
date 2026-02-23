@@ -2,313 +2,136 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dom Music</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#ff7a00">
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBp4HTngTmzi3Kh2ejMSURnU8ctJoTJ1ms",
+    authDomain: "dom-music-127a8.firebaseapp.com",
+    projectId: "dom-music-127a8",
+    storageBucket: "dom-music-127a8.firebasestorage.app",
+    messagingSenderId: "412932629110",
+    appId: "1:412932629110:web:f6122e06eb77179a3f3557"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  window.registrar = async function() {
+    const email = document.getElementById("email").value;
+    const senha = document.getElementById("senha").value;
+    const tipo = document.getElementById("tipo").value;
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+      await setDoc(doc(db, "usuarios", userCredential.user.uid), {
+        email: email,
+        tipo: tipo
+      });
+      alert("Conta criada com sucesso!");
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  window.login = async function() {
+    const email = document.getElementById("email").value;
+    const senha = document.getElementById("senha").value;
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      const docSnap = await getDoc(doc(db, "usuarios", userCredential.user.uid));
+
+      if (docSnap.exists()) {
+        const dados = docSnap.data();
+        if (dados.tipo === "professor") {
+          document.getElementById("login").style.display = "none";
+          document.getElementById("professor").style.display = "block";
+        } else {
+          document.getElementById("login").style.display = "none";
+          document.getElementById("aluno").style.display = "block";
+        }
+      }
+
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  window.logout = async function() {
+    await signOut(auth);
+    location.reload();
+  }
+</script>
 
 <style>
-*{box-sizing:border-box}
-
 body{
- margin:0;
- font-family:Poppins, sans-serif;
- background:linear-gradient(180deg,#0f172a,#020617);
- color:#fff;
- overflow-x:hidden;
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:#fff;
+  padding:20px;
 }
-
-.splash{
- position:fixed;
- inset:0;
- background:linear-gradient(135deg,#ff7a00,#ff5500);
- display:flex;
- align-items:center;
- justify-content:center;
- flex-direction:column;
- z-index:9999;
- animation:fadeOut 1s ease forwards;
- animation-delay:2s;
-}
-
-.splash h1{
- font-size:32px;
- letter-spacing:3px;
- margin:0;
-}
-
-@keyframes fadeOut{
- to{opacity:0; visibility:hidden;}
-}
-
-.header{
- padding:20px;
- font-weight:700;
- font-size:20px;
- text-align:center;
- color:#ff7a00;
-}
-
-.screen{
- display:none;
- padding:20px;
- animation:fade .4s ease;
-}
-
-@keyframes fade{
- from{opacity:0; transform:translateY(10px)}
- to{opacity:1; transform:translateY(0)}
-}
-
-.active{display:block}
-
 .card{
- background:rgba(255,255,255,0.05);
- border-radius:24px;
- padding:20px;
- margin-bottom:20px;
- box-shadow:0 15px 35px rgba(0,0,0,0.4);
+  background:#1e293b;
+  padding:20px;
+  border-radius:15px;
+  margin-bottom:20px;
 }
-
-h3{
- margin-top:0;
- color:#ff7a00;
+input,select{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:10px;
+  border:none;
 }
-
-input,select,textarea{
- width:100%;
- padding:15px;
- border-radius:16px;
- border:none;
- background:rgba(255,255,255,0.08);
- color:#fff;
- margin-bottom:14px;
-}
-
 button{
- width:100%;
- padding:15px;
- border:none;
- border-radius:18px;
- background:linear-gradient(135deg,#ff7a00,#ff5500);
- color:#fff;
- font-weight:600;
- cursor:pointer;
- transition:.2s;
-}
-
-button:hover{
- transform:translateY(-2px);
-}
-
-.list{
- padding:16px;
- border-radius:18px;
- margin-bottom:12px;
- display:flex;
- justify-content:space-between;
- align-items:center;
- background:rgba(255,255,255,0.08);
-}
-
-.badge{
- font-size:12px;
- padding:6px 14px;
- border-radius:20px;
- font-weight:600;
-}
-
-.ok{background:#ff7a00;}
-.pendente{background:rgba(255,255,255,0.2);}
-
-.media video,.media audio{
- width:100%;
- margin-top:16px;
- border-radius:18px;
-}
-
-.progress{
- height:14px;
- background:rgba(255,255,255,0.1);
- border-radius:14px;
- overflow:hidden;
- margin-bottom:18px;
-}
-
-.progress span{
- display:block;
- height:100%;
- background:linear-gradient(90deg,#ff7a00,#ff5500);
- transition:.4s;
+  width:100%;
+  padding:12px;
+  background:#ff7a00;
+  border:none;
+  border-radius:10px;
+  color:#fff;
+  font-weight:bold;
 }
 </style>
 
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", function() {
-    navigator.serviceWorker.register("/sw.js");
-  });
-}
-</script>
 </head>
-
 <body>
 
-<div class="splash">
-  <h1>DOM MUSIC</h1>
+<div id="login" class="card">
+  <h2>Dom Music - Login</h2>
+  <select id="tipo">
+    <option value="aluno">Aluno</option>
+    <option value="professor">Professor</option>
+  </select>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="senha" placeholder="Senha">
+  <button onclick="login()">Entrar</button>
+  <br><br>
+  <button onclick="registrar()">Criar Conta</button>
 </div>
 
-<div class="header">DOM MUSIC</div>
-
-<div id="login" class="screen active">
-  <div class="card">
-    <h3>Entrar</h3>
-    <select id="tipo">
-      <option value="prof">Professor</option>
-      <option value="aluno">Aluno</option>
-    </select>
-    <input id="user" placeholder="Usuário">
-    <input id="pass" type="password" placeholder="Senha">
-    <button onclick="entrar()">Entrar</button>
-  </div>
+<div id="professor" class="card" style="display:none">
+  <h2>Painel do Professor</h2>
+  <p>Login realizado com sucesso.</p>
+  <button onclick="logout()">Sair</button>
 </div>
 
-<div id="prof" class="screen">
-  <button onclick="sair()">Sair</button>
-
-  <div class="card">
-    <h3>Biblioteca</h3>
-    <input id="midiaNome" placeholder="Nome da mídia">
-    <input type="file" id="midiaArquivo" accept="audio/*,video/*">
-    <button onclick="salvarMidia()">Salvar mídia</button>
-    <div id="listaMidias"></div>
-  </div>
-
-  <div class="card">
-    <h3>Criar Aula</h3>
-    <input id="aulaTitulo" placeholder="Título">
-    <textarea id="aulaTexto" placeholder="Descrição"></textarea>
-    <select id="aulaMidia"></select>
-    <button onclick="criarAula()">Criar aula</button>
-  </div>
+<div id="aluno" class="card" style="display:none">
+  <h2>Painel do Aluno</h2>
+  <p>Login realizado com sucesso.</p>
+  <button onclick="logout()">Sair</button>
 </div>
-
-<div id="aluno" class="screen">
-  <button onclick="sair()">Sair</button>
-
-  <div class="card">
-    <h3>Progresso</h3>
-    <div class="progress"><span id="barra"></span></div>
-    <p id="percentual"></p>
-  </div>
-
-  <div id="aulas"></div>
-
-  <div id="verAula" class="card" style="display:none">
-    <h3 id="vtitulo"></h3>
-    <p id="vtexto"></p>
-    <div id="vmedia" class="media"></div>
-    <button onclick="concluir()">Marcar como concluída</button>
-  </div>
-</div>
-
-<script>
-setTimeout(()=>{},2000);
-
-const DB = JSON.parse(localStorage.getItem("domMusic")) || {
-  midias:[], aulas:[], progresso:{}
-};
-
-let aulaAtual=null;
-
-function save(){localStorage.setItem("domMusic",JSON.stringify(DB))}
-function show(id){
- document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
- document.getElementById(id).classList.add("active");
-}
-
-function entrar(){
- if(tipo.value==="prof" && user.value==="professor" && pass.value==="1234"){
-   show("prof"); atualizar();
- } else if(tipo.value==="aluno"){
-   show("aluno"); listarAulas(); atualizarProgresso();
- } else alert("Login inválido");
-}
-function sair(){show("login")}
-
-function salvarMidia(){
- const file=midiaArquivo.files[0];
- if(!file) return alert("Selecione um arquivo");
- const r=new FileReader();
- r.onload=()=>{
-  DB.midias.push({nome:midiaNome.value,tipo:file.type,data:r.result});
-  midiaNome.value=""; midiaArquivo.value="";
-  save(); atualizar();
- };
- r.readAsDataURL(file);
-}
-
-function atualizar(){
- listaMidias.innerHTML="";
- aulaMidia.innerHTML="<option value=''>Sem mídia</option>";
- DB.midias.forEach((m,i)=>{
-  listaMidias.innerHTML+=`<div class="list">${m.nome}</div>`;
-  aulaMidia.innerHTML+=`<option value="${i}">${m.nome}</option>`;
- });
-}
-
-function criarAula(){
- DB.aulas.push({titulo:aulaTitulo.value,texto:aulaTexto.value,midia:aulaMidia.value});
- aulaTitulo.value=aulaTexto.value="";
- save(); alert("Aula criada");
-}
-
-function listarAulas(){
- aulas.innerHTML="";
- DB.aulas.forEach((a,i)=>{
-  const done=DB.progresso[i];
-  aulas.innerHTML+=`
-   <div class="list" onclick="abrir(${i})">
-    ${a.titulo}
-    <span class="badge ${done?'ok':'pendente'}">
-      ${done?'Concluída':'Pendente'}
-    </span>
-   </div>`;
- });
-}
-
-function abrir(i){
- aulaAtual=i;
- const a=DB.aulas[i];
- verAula.style.display="block";
- vtitulo.innerText=a.titulo;
- vtexto.innerText=a.texto;
- vmedia.innerHTML="";
- if(a.midia==="") return;
- const m=DB.midias[a.midia];
- if(m.tipo.startsWith("video")){
-  vmedia.innerHTML=`<video controls controlsList="nodownload" src="${m.data}"></video>`;
- } else {
-  vmedia.innerHTML=`<audio controls controlsList="nodownload" src="${m.data}"></audio>`;
- }
-}
-
-function concluir(){
- DB.progresso[aulaAtual]=true;
- save(); listarAulas(); atualizarProgresso();
-}
-
-function atualizarProgresso(){
- const total=DB.aulas.length;
- const concluidas=Object.values(DB.progresso).filter(v=>v).length;
- const pct= total?Math.round(concluidas/total*100):0;
- barra.style.width=pct+"%";
- percentual.innerText=pct+"% concluído";
-}
-</script>
 
 </body>
 </html>
