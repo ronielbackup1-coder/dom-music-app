@@ -5,73 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dom Music</title>
 
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff7a00">
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBp4HTngTmzi3Kh2ejMSURnU8ctJoTJ1ms",
-    authDomain: "dom-music-127a8.firebaseapp.com",
-    projectId: "dom-music-127a8",
-    storageBucket: "dom-music-127a8.firebasestorage.app",
-    messagingSenderId: "412932629110",
-    appId: "1:412932629110:web:f6122e06eb77179a3f3557"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  window.registrar = async function() {
-    const email = document.getElementById("email").value;
-    const senha = document.getElementById("senha").value;
-    const tipo = document.getElementById("tipo").value;
-
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-      await setDoc(doc(db, "usuarios", userCredential.user.uid), {
-        email: email,
-        tipo: tipo
-      });
-      alert("Conta criada com sucesso!");
-    } catch (error) {
-      alert(error.message);
-    }
-  }
-
-  window.login = async function() {
-    const email = document.getElementById("email").value;
-    const senha = document.getElementById("senha").value;
-
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-      const docSnap = await getDoc(doc(db, "usuarios", userCredential.user.uid));
-
-      if (docSnap.exists()) {
-        const dados = docSnap.data();
-        if (dados.tipo === "professor") {
-          document.getElementById("login").style.display = "none";
-          document.getElementById("professor").style.display = "block";
-        } else {
-          document.getElementById("login").style.display = "none";
-          document.getElementById("aluno").style.display = "block";
-        }
-      }
-
-    } catch (error) {
-      alert(error.message);
-    }
-  }
-
-  window.logout = async function() {
-    await signOut(auth);
-    location.reload();
-  }
-</script>
 
 <style>
 body{
@@ -102,36 +37,152 @@ button{
   border-radius:10px;
   color:#fff;
   font-weight:bold;
+  cursor:pointer;
+}
+.video{
+  width:100%;
+  height:200px;
 }
 </style>
-
 </head>
 <body>
 
 <div id="login" class="card">
-  <h2>Dom Music - Login</h2>
-  <select id="tipo">
-    <option value="aluno">Aluno</option>
-    <option value="professor">Professor</option>
-  </select>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="senha" placeholder="Senha">
-  <button onclick="login()">Entrar</button>
-  <br><br>
-  <button onclick="registrar()">Criar Conta</button>
+<h2>Dom Music</h2>
+<select id="tipo">
+<option value="aluno">Aluno</option>
+<option value="professor">Professor</option>
+</select>
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="senha" placeholder="Senha">
+<button onclick="login()">Entrar</button>
+<button onclick="registrar()">Criar Conta</button>
 </div>
 
 <div id="professor" class="card" style="display:none">
-  <h2>Painel do Professor</h2>
-  <p>Login realizado com sucesso.</p>
-  <button onclick="logout()">Sair</button>
+<h2>Painel do Professor</h2>
+
+<input type="text" id="tituloAula" placeholder="Título da Aula">
+<input type="text" id="cursoAula" placeholder="Curso (ex: violao-iniciante)">
+<input type="text" id="videoURL" placeholder="Link YouTube (incorporar)">
+<input type="file" id="pdfFile">
+<button onclick="criarAula()">Criar Aula</button>
+
+<button onclick="logout()">Sair</button>
 </div>
 
 <div id="aluno" class="card" style="display:none">
-  <h2>Painel do Aluno</h2>
-  <p>Login realizado com sucesso.</p>
-  <button onclick="logout()">Sair</button>
+<h2>Minhas Aulas</h2>
+<div id="listaAulas"></div>
+<button onclick="logout()">Sair</button>
 </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBp4HTngTmzi3Kh2ejMSURnU8ctJoTJ1ms",
+authDomain: "dom-music-127a8.firebaseapp.com",
+projectId: "dom-music-127a8",
+storageBucket: "dom-music-127a8.appspot.com",
+messagingSenderId: "412932629110",
+appId: "1:412932629110:web:f6122e06eb77179a3f3557"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+window.registrar = async function(){
+const email = email.value;
+const senha = document.getElementById("senha").value;
+const tipo = document.getElementById("tipo").value;
+
+const user = await createUserWithEmailAndPassword(auth,email,senha);
+await setDoc(doc(db,"usuarios",user.user.uid),{
+email:email,
+tipo:tipo
+});
+alert("Conta criada");
+}
+
+window.login = async function(){
+const email = document.getElementById("email").value;
+const senha = document.getElementById("senha").value;
+
+await signInWithEmailAndPassword(auth,email,senha);
+}
+
+window.logout = async function(){
+await signOut(auth);
+location.reload();
+}
+
+onAuthStateChanged(auth, async (user)=>{
+if(user){
+document.getElementById("login").style.display="none";
+
+const usuarios = await getDocs(collection(db,"usuarios"));
+usuarios.forEach(docu=>{
+if(docu.id === user.uid){
+if(docu.data().tipo==="professor"){
+document.getElementById("professor").style.display="block";
+}else{
+document.getElementById("aluno").style.display="block";
+carregarAulas();
+}
+}
+});
+}
+});
+
+window.criarAula = async function(){
+const titulo = document.getElementById("tituloAula").value;
+const curso = document.getElementById("cursoAula").value;
+const video = document.getElementById("videoURL").value;
+const file = document.getElementById("pdfFile").files[0];
+
+let pdfURL = "";
+
+if(file){
+const storageRef = ref(storage,"materiais/"+file.name);
+await uploadBytes(storageRef,file);
+pdfURL = await getDownloadURL(storageRef);
+}
+
+await addDoc(collection(db,"aulas"),{
+titulo:titulo,
+curso:curso,
+videoURL:video,
+pdfURL:pdfURL
+});
+
+alert("Aula criada");
+}
+
+async function carregarAulas(){
+const lista = document.getElementById("listaAulas");
+lista.innerHTML="";
+
+const querySnapshot = await getDocs(collection(db,"aulas"));
+querySnapshot.forEach(docu=>{
+const aula = docu.data();
+
+lista.innerHTML += `
+<div class="card">
+<h3>${aula.titulo}</h3>
+<iframe class="video" src="${aula.videoURL}" frameborder="0" allowfullscreen></iframe>
+<br>
+<a href="${aula.pdfURL}" target="_blank"><button>Baixar PDF</button></a>
+</div>
+`;
+});
+}
+</script>
 
 </body>
 </html>
