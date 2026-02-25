@@ -10,20 +10,83 @@ body{
     color:white;
     font-family:Arial;
     text-align:center;
-    padding-top:100px;
+    padding-top:80px;
 }
 
-h1{
-    color:orange;
+.card{
+    background:#1c2541;
+    width:400px;
+    margin:auto;
+    padding:30px;
+    border-radius:10px;
+}
+
+button{
+    padding:12px;
+    margin-top:20px;
+    width:100%;
+    background:orange;
+    border:none;
+    color:white;
+    font-size:16px;
+    border-radius:6px;
+    cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<h1>Bem-vindo ao DOM MUSIC 🎵</h1>
+<div class="card">
+<h1>🎵 DOM MUSIC</h1>
 
-<p>Login realizado com sucesso!</p>
+<p>Usuário logado:</p>
+<h3 id="usuario"></h3>
+
+<button id="logout">Sair</button>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { 
+getAuth,
+onAuthStateChanged,
+signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBp4HTngTmzi3Kh2ejMSURnU8ctJoTJ1ms",
+  authDomain: "dom-music-127a8.firebaseapp.com",
+  projectId: "dom-music-127a8",
+  storageBucket: "dom-music-127a8.firebasestorage.app",
+  messagingSenderId: "412932629110",
+  appId: "1:412932629110:web:f6122e06eb77179a3f3557"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth,(user)=>{
+
+if(user){
+document.getElementById("usuario").innerText = user.email;
+}else{
+window.location.href="index.html";
+}
+
+});
+
+document.getElementById("logout")
+.addEventListener("click",()=>{
+
+signOut(auth).then(()=>{
+window.location.href="index.html";
+});
+
+});
+
+</script>
 
 </body>
 </html>
