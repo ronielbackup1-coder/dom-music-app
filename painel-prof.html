@@ -6,37 +6,38 @@
 
 <style>
 body{
-background:#020617;
+background:#0b132b;
 color:white;
 font-family:Arial;
-padding:30px;
+padding:40px;
 }
 
 .card{
-background:#1e293b;
+background:#1c2541;
 padding:20px;
 border-radius:10px;
 max-width:500px;
 margin:auto;
 }
 
-input{
+input,textarea{
 width:100%;
 padding:10px;
 margin-top:10px;
-border-radius:6px;
 border:none;
+border-radius:6px;
 }
 
 button{
 margin-top:15px;
-width:100%;
 padding:12px;
+width:100%;
 background:orange;
 border:none;
 color:white;
-font-weight:bold;
+font-size:16px;
 border-radius:6px;
+cursor:pointer;
 }
 </style>
 </head>
@@ -45,41 +46,32 @@ border-radius:6px;
 
 <div class="card">
 
-<h2>👨‍🏫 Painel Professor</h2>
+<h2>🎵 Criar Aula</h2>
 
-<input id="titulo" placeholder="Título da Aula">
-<input id="video" placeholder="Link Youtube Incorporado">
-<input type="file" id="pdf">
+<input id="titulo" placeholder="Título da aula">
+<textarea id="descricao" placeholder="Descrição"></textarea>
 
-<button onclick="criarAula()">Criar Aula</button>
+<button id="salvar">Publicar Aula</button>
 
-<button id="logout">Sair</button>
+<hr>
+
+<h3>Aulas Criadas</h3>
+<div id="lista"></div>
 
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-getAuth,
-onAuthStateChanged,
-signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
 getFirestore,
 collection,
-addDoc
+addDoc,
+getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import {
-getStorage,
-ref,
-uploadBytes,
-getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-const firebaseConfig = {
+const firebaseConfig={
 apiKey:"AIzaSyBp4HTngTmzi3Kh2ejMSURnU8ctJoTJ1ms",
 authDomain:"dom-music-127a8.firebaseapp.com",
 projectId:"dom-music-127a8",
@@ -88,46 +80,42 @@ messagingSenderId:"412932629110",
 appId:"1:412932629110:web:f6122e06eb77179a3f3557"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-onAuthStateChanged(auth,(user)=>{
-if(!user){
-window.location.href="index.html";
-}
+const lista=document.getElementById("lista");
+
+async function carregar(){
+
+lista.innerHTML="";
+
+const querySnapshot=await getDocs(collection(db,"aulas"));
+
+querySnapshot.forEach(doc=>{
+const aula=doc.data();
+
+lista.innerHTML+=`
+<p>📚 ${aula.titulo}</p>
+`;
 });
 
-window.criarAula = async function(){
-
-const titulo=document.getElementById("titulo").value;
-const video=document.getElementById("video").value;
-const file=document.getElementById("pdf").files[0];
-
-let pdfURL="";
-
-if(file){
-const storageRef=ref(storage,"materiais/"+file.name);
-await uploadBytes(storageRef,file);
-pdfURL=await getDownloadURL(storageRef);
 }
+
+document.getElementById("salvar")
+.addEventListener("click",async()=>{
 
 await addDoc(collection(db,"aulas"),{
-titulo,
-video,
-pdfURL
+titulo:document.getElementById("titulo").value,
+descricao:document.getElementById("descricao").value
 });
 
-alert("Aula criada!");
-}
+alert("Aula publicada!");
 
-document.getElementById("logout")
-.addEventListener("click",()=>{
-signOut(auth).then(()=>{
-window.location.href="index.html";
+carregar();
+
 });
-});
+
+carregar();
 
 </script>
 
