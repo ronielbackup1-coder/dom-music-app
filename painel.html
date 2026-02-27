@@ -2,86 +2,76 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Painel DOM MUSIC</title>
+<title>Painel Aluno</title>
 
 <style>
 body{
-    background:#0b132b;
-    color:white;
-    font-family:Arial;
-    text-align:center;
-    padding-top:80px;
+background:#0b132b;
+color:white;
+font-family:Arial;
+padding:40px;
 }
 
 .card{
-    background:#1c2541;
-    width:400px;
-    margin:auto;
-    padding:30px;
-    border-radius:10px;
+background:#1c2541;
+padding:20px;
+border-radius:10px;
+max-width:600px;
+margin:auto;
+margin-bottom:15px;
 }
 
-button{
-    padding:12px;
-    margin-top:20px;
-    width:100%;
-    background:orange;
-    border:none;
-    color:white;
-    font-size:16px;
-    border-radius:6px;
-    cursor:pointer;
+h2{
+text-align:center;
 }
 </style>
 </head>
 
 <body>
 
-<div class="card">
-<h1>🎵 DOM MUSIC</h1>
+<h2>🎓 Aulas Disponíveis</h2>
 
-<p>Usuário logado:</p>
-<h3 id="usuario"></h3>
-
-<button id="logout">Sair</button>
-</div>
+<div id="aulas"></div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-getAuth,
-onAuthStateChanged,
-signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBp4HTngTmzi3Kh2ejMSURnU8ctJoTJ1ms",
-  authDomain: "dom-music-127a8.firebaseapp.com",
-  projectId: "dom-music-127a8",
-  storageBucket: "dom-music-127a8.firebasestorage.app",
-  messagingSenderId: "412932629110",
-  appId: "1:412932629110:web:f6122e06eb77179a3f3557"
+import {
+getFirestore,
+collection,
+onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBp4HTngTmzi3Kh2ejMSURnU8ctJoTJ1ms",
+authDomain:"dom-music-127a8.firebaseapp.com",
+projectId:"dom-music-127a8",
+storageBucket:"dom-music-127a8.appspot.com",
+messagingSenderId:"412932629110",
+appId:"1:412932629110:web:f6122e06eb77179a3f3557"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-onAuthStateChanged(auth,(user)=>{
+const aulasDiv=document.getElementById("aulas");
 
-if(user){
-document.getElementById("usuario").innerText = user.email;
-}else{
-window.location.href="index.html";
-}
+onSnapshot(collection(db,"aulas"),(snapshot)=>{
 
-});
+aulasDiv.innerHTML="";
 
-document.getElementById("logout")
-.addEventListener("click",()=>{
+snapshot.forEach(doc=>{
 
-signOut(auth).then(()=>{
-window.location.href="index.html";
+const aula=doc.data();
+
+aulasDiv.innerHTML+=`
+<div class="card">
+<h3>${aula.titulo}</h3>
+<p>${aula.descricao}</p>
+</div>
+`;
+
 });
 
 });
