@@ -50,16 +50,16 @@ cursor:pointer;
 
 <h2>DOM MUSIC 🎵</h2>
 
-<select id="tipo">
+<select id="tipoUsuario">
 <option value="aluno">Aluno</option>
 <option value="professor">Professor</option>
 </select>
 
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="senha" placeholder="Senha">
+<input type="email" id="emailInput" placeholder="Email">
+<input type="password" id="senhaInput" placeholder="Senha">
 
-<button onclick="criarConta()">Criar Conta</button>
-<button onclick="login()">Entrar</button>
+<button id="btnCriar">Criar Conta</button>
+<button id="btnLogin">Entrar</button>
 
 </div>
 
@@ -80,7 +80,7 @@ setDoc,
 getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig={
+const firebaseConfig = {
 apiKey:"AIzaSyBp4HTngTmzi3Kh2ejMSURnU8ctJoTJ1ms",
 authDomain:"dom-music-127a8.firebaseapp.com",
 projectId:"dom-music-127a8",
@@ -89,51 +89,71 @@ messagingSenderId:"412932629110",
 appId:"1:412932629110:web:f6122e06eb77179a3f3557"
 };
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-window.criarConta=async function(){
+const emailInput = document.getElementById("emailInput");
+const senhaInput = document.getElementById("senhaInput");
+const tipoUsuario = document.getElementById("tipoUsuario");
 
-const email=email.value;
-const senha=senha.value;
-const tipo=tipo.value;
+document.getElementById("btnCriar")
+.addEventListener("click", async ()=>{
 
-const user=await createUserWithEmailAndPassword(auth,email,senha);
+try{
 
-await setDoc(doc(db,"usuarios",user.user.uid),{
-tipo:tipo,
-email:email
+const cred = await createUserWithEmailAndPassword(
+auth,
+emailInput.value,
+senhaInput.value
+);
+
+await setDoc(doc(db,"usuarios",cred.user.uid),{
+email: emailInput.value,
+tipo: tipoUsuario.value
 });
 
 alert("Conta criada!");
 
-if(tipo==="professor"){
-window.location.href="painel-prof.html";
-}else{
-window.location.href="painel.html";
-}
-}
-
-window.login=async function(){
-
-const email=document.getElementById("email").value;
-const senha=document.getElementById("senha").value;
-
-const cred=await signInWithEmailAndPassword(auth,email,senha);
-
-const docRef=doc(db,"usuarios",cred.user.uid);
-const snap=await getDoc(docRef);
-
-const tipo=snap.data().tipo;
-
-if(tipo==="professor"){
+if(tipoUsuario.value==="professor"){
 window.location.href="painel-prof.html";
 }else{
 window.location.href="painel.html";
 }
 
+}catch(e){
+alert(e.message);
 }
+
+});
+
+document.getElementById("btnLogin")
+.addEventListener("click", async ()=>{
+
+try{
+
+const cred = await signInWithEmailAndPassword(
+auth,
+emailInput.value,
+senhaInput.value
+);
+
+const ref = doc(db,"usuarios",cred.user.uid);
+const snap = await getDoc(ref);
+
+const tipo = snap.data().tipo;
+
+if(tipo==="professor"){
+window.location.href="painel-prof.html";
+}else{
+window.location.href="painel.html";
+}
+
+}catch(e){
+alert(e.message);
+}
+
+});
 
 </script>
 
