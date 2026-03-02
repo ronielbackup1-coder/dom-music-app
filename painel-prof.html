@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Painel Professor</title>
@@ -24,8 +24,8 @@ input,textarea{
 width:100%;
 padding:10px;
 margin-top:10px;
-border:none;
 border-radius:6px;
+border:none;
 }
 
 button{
@@ -33,10 +33,9 @@ margin-top:15px;
 padding:12px;
 width:100%;
 background:orange;
-border:none;
 color:white;
+border:none;
 font-size:16px;
-border-radius:6px;
 cursor:pointer;
 }
 </style>
@@ -46,77 +45,58 @@ cursor:pointer;
 
 <div class="card">
 
-<h2>🎵 Criar Aula</h2>
+<h2>Nova Aula</h2>
 
-<input id="titulo" placeholder="Título da aula">
-<textarea id="descricao" placeholder="Descrição"></textarea>
+<input id="titulo" placeholder="Título">
 
-<button id="salvar">Publicar Aula</button>
+<textarea id="descricao"
+placeholder="Descrição"></textarea>
 
-<hr>
+<input id="video"
+placeholder="Link do vídeo YouTube">
 
-<h3>Aulas Criadas</h3>
-<div id="lista"></div>
+<input id="pdf"
+placeholder="Link do PDF">
+
+<button id="salvar">
+Publicar Aula
+</button>
 
 </div>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
 getFirestore,
 collection,
-addDoc,
-getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+addDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBp4HTngTmzi3Kh2ejMSURnU8ctJoTJ1ms",
 authDomain:"dom-music-127a8.firebaseapp.com",
 projectId:"dom-music-127a8",
-storageBucket:"dom-music-127a8.appspot.com",
-messagingSenderId:"412932629110",
-appId:"1:412932629110:web:f6122e06eb77179a3f3557"
 };
 
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-const lista=document.getElementById("lista");
-
-async function carregar(){
-
-lista.innerHTML="";
-
-const querySnapshot=await getDocs(collection(db,"aulas"));
-
-querySnapshot.forEach(doc=>{
-const aula=doc.data();
-
-lista.innerHTML+=`
-<p>📚 ${aula.titulo}</p>
-`;
-});
-
-}
-
-document.getElementById("salvar")
-.addEventListener("click",async()=>{
+salvar.onclick=async()=>{
 
 await addDoc(collection(db,"aulas"),{
-titulo:document.getElementById("titulo").value,
-descricao:document.getElementById("descricao").value
+titulo:titulo.value,
+descricao:descricao.value,
+video:video.value,
+pdf:pdf.value
 });
 
 alert("Aula publicada!");
 
-carregar();
-
-});
-
-carregar();
-
+}
 </script>
 
 </body>
